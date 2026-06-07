@@ -56,6 +56,16 @@ struct ExpandedGraphView: View {
                         style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round)
                     )
                     .padding(10)
+
+                if let secondaryHistory = metric.secondaryHistory(from: monitor),
+                   let secondaryColor = metric.secondaryColor() {
+                    SparklineShape(values: secondaryHistory)
+                        .stroke(
+                            secondaryColor,
+                            style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round)
+                        )
+                        .padding(10)
+                }
             }
             .frame(height: 96)
 

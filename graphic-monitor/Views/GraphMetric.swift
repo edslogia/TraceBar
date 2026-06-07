@@ -25,16 +25,33 @@ enum GraphMetric: Hashable {
         case .cpu: Color(red: 0.45, green: 0.82, blue: 0.09)
         case .gpu: Color(red: 0.99, green: 0.69, blue: 0.24)
         case .ram: Color(red: 0.45, green: 0.62, blue: 0.81)
-        case .network: Color(red: 0.68, green: 0.50, blue: 0.66)
+        case .network: Self.downloadColor
         }
     }
+
+    static let downloadColor = Color(red: 0.35, green: 0.78, blue: 0.98)
+    static let uploadColor = Color(red: 0.98, green: 0.55, blue: 0.35)
 
     func history(from monitor: SystemMonitor) -> [Double] {
         switch self {
         case .cpu: monitor.cpuHistory
         case .gpu: monitor.gpuHistory
         case .ram: monitor.ramHistory
-        case .network: monitor.netHistory
+        case .network: monitor.netDownloadHistory
+        }
+    }
+
+    func secondaryHistory(from monitor: SystemMonitor) -> [Double]? {
+        switch self {
+        case .network: monitor.netUploadHistory
+        default: nil
+        }
+    }
+
+    func secondaryColor() -> Color? {
+        switch self {
+        case .network: Self.uploadColor
+        default: nil
         }
     }
 
@@ -47,7 +64,7 @@ enum GraphMetric: Hashable {
         case .ram:
             "RAM: \(SystemMonitor.formatPercent(monitor.ramUsage))"
         case .network:
-            "Network: \(SystemMonitor.formatNetworkSpeed(monitor.netBytesPerSecond))"
+            "↓ \(SystemMonitor.formatNetworkSpeedMbps(monitor.netDownloadBytesPerSecond)) \(SystemMonitor.formatNetworkSpeed(monitor.netDownloadBytesPerSecond)) · ↑ \(SystemMonitor.formatNetworkSpeedMbps(monitor.netUploadBytesPerSecond)) \(SystemMonitor.formatNetworkSpeed(monitor.netUploadBytesPerSecond))"
         }
     }
 
@@ -60,7 +77,7 @@ enum GraphMetric: Hashable {
         case .ram:
             SystemMonitor.formatPercent(monitor.ramUsage)
         case .network:
-            SystemMonitor.formatNetworkSpeed(monitor.netBytesPerSecond)
+            "↓ \(SystemMonitor.formatNetworkSpeedMbps(monitor.netDownloadBytesPerSecond)) \(SystemMonitor.formatNetworkSpeed(monitor.netDownloadBytesPerSecond)) · ↑ \(SystemMonitor.formatNetworkSpeedMbps(monitor.netUploadBytesPerSecond)) \(SystemMonitor.formatNetworkSpeed(monitor.netUploadBytesPerSecond))"
         }
     }
 

@@ -24,6 +24,8 @@ struct MenuBarMonitorView: View {
             data: metric.history(from: monitor),
             color: metric.color,
             tooltip: metric.tooltip(from: monitor),
+            secondaryData: metric.secondaryHistory(from: monitor),
+            secondaryColor: metric.secondaryColor(),
             onTap: { anchor in
                 ExpandedGraphPanelManager.shared.toggle(
                     metric: metric,

@@ -14,12 +14,14 @@ final class SystemMonitor {
     private(set) var cpuHistory: [Double] = Array(repeating: 0, count: historyLength)
     private(set) var gpuHistory: [Double] = Array(repeating: 0, count: historyLength)
     private(set) var ramHistory: [Double] = Array(repeating: 0, count: historyLength)
-    private(set) var netHistory: [Double] = Array(repeating: 0, count: historyLength)
+    private(set) var netDownloadHistory: [Double] = Array(repeating: 0, count: historyLength)
+    private(set) var netUploadHistory: [Double] = Array(repeating: 0, count: historyLength)
 
     private(set) var cpuUsage: Double = 0
     private(set) var gpuUsage: Double = 0
     private(set) var ramUsage: Double = 0
-    private(set) var netUsage: Double = 0
+    private(set) var netDownloadBytesPerSecond: Double = 0
+    private(set) var netUploadBytesPerSecond: Double = 0
     private(set) var netBytesPerSecond: Double = 0
 
     private var timer: Timer?
@@ -56,13 +58,29 @@ final class SystemMonitor {
         append(&ramHistory, ram)
 
         let network = readNetworkSample()
-        netUsage = network.normalized
-        netBytesPerSecond = network.bytesPerSecond
-        append(&netHistory, network.normalized)
+        netDownloadBytesPerSecond = network.downloadBytesPerSecond
+        netUploadBytesPerSecond = network.uploadBytesPerSecond
+        netBytesPerSecond = network.downloadBytesPerSecond + network.uploadBytesPerSecond
+        append(&netDownloadHistory, network.downloadNormalized)
+        append(&netUploadHistory, network.uploadNormalized)
     }
 
     static func formatPercent(_ value: Double) -> String {
         "\(Int((min(max(value, 0), 1) * 100).rounded()))%"
+    }
+
+    static func formatNetworkSpeedMbps(_ bytesPerSecond: Double) -> String {
+        let mbps = bytesPerSecond * 8 / 1_000_000
+        if mbps >= 100 {
+            return String(format: "%.0f Mbps", mbps)
+        }
+        if mbps >= 10 {
+            return String(format: "%.1f Mbps", mbps)
+        }
+        if mbps >= 1 {
+            return String(format: "%.1f Mbps", mbps)
+        }
+        return String(format: "%.2f Mbps", mbps)
     }
 
     static func formatNetworkSpeed(_ bytesPerSecond: Double) -> String {
@@ -195,8 +213,10 @@ final class SystemMonitor {
     // MARK: - Network
 
     private struct NetworkSample {
-        let normalized: Double
-        let bytesPerSecond: Double
+        let downloadNormalized: Double
+        let uploadNormalized: Double
+        let downloadBytesPerSecond: Double
+        let uploadBytesPerSecond: Double
     }
 
     private func readNetworkSample() -> NetworkSample {
@@ -204,7 +224,12 @@ final class SystemMonitor {
         defer { previousNetworkBytes = bytes }
 
         guard let previous = previousNetworkBytes else {
-            return NetworkSample(normalized: 0, bytesPerSecond: 0)
+            return NetworkSample(
+                downloadNormalized: 0,
+                uploadNormalized: 0,
+                downloadBytesPerSecond: 0,
+                uploadBytesPerSecond: 0
+            )
         }
 
         let receivedDelta = bytes.received >= previous.received
@@ -213,11 +238,17 @@ final class SystemMonitor {
         let sentDelta = bytes.sent >= previous.sent
             ? bytes.sent - previous.sent
             : 0
-        let throughput = Double(receivedDelta + sentDelta)
+        let download = Double(receivedDelta)
+        let upload = Double(sentDelta)
+        let throughput = download + upload
 
         networkPeak = max(networkPeak * 0.95, throughput, 65_536)
-        let normalized = min(throughput / networkPeak, 1)
-        return NetworkSample(normalized: normalized, bytesPerSecond: throughput)
+        return NetworkSample(
+            downloadNormalized: min(download / networkPeak, 1),
+            uploadNormalized: min(upload / networkPeak, 1),
+            downloadBytesPerSecond: download,
+            uploadBytesPerSecond: upload
+        )
     }
 
     private func networkBytes() -> (received: UInt64, sent: UInt64) {

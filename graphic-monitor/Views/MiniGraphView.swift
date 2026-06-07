@@ -9,6 +9,8 @@ struct MiniGraphView: View {
     let data: [Double]
     let color: Color
     let tooltip: String
+    var secondaryData: [Double]? = nil
+    var secondaryColor: Color? = nil
     var onTap: ((NSRect) -> Void)? = nil
 
     var body: some View {
@@ -23,6 +25,12 @@ struct MiniGraphView: View {
             SparklineShape(values: data)
                 .stroke(color, style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
                 .padding(2)
+
+            if let secondaryData, let secondaryColor {
+                SparklineShape(values: secondaryData)
+                    .stroke(secondaryColor, style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
+                    .padding(2)
+            }
         }
         .frame(width: 38, height: 18)
         .contentShape(Rectangle())
