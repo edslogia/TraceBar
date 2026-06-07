@@ -6,17 +6,22 @@
 import AppKit
 import SwiftUI
 
+private final class DraggableHostingView<Content: View>: NSHostingView<Content> {
+    override var mouseDownCanMoveWindow: Bool { true }
+}
+
 @MainActor
 final class ExpandedGraphPanelManager {
     static let shared = ExpandedGraphPanelManager()
 
     private var panel: NSPanel?
-    private var hostingView: NSHostingView<ExpandedGraphView>?
+    private var hostingView: DraggableHostingView<ExpandedGraphView>?
     private var currentMetric: GraphMetric?
     private weak var monitor: SystemMonitor?
     private var outsideClickMonitor: Any?
     private var dismissExclusionRect: (() -> NSRect)?
     private(set) var isPinned = false
+    private var anchorOrigin: NSPoint = .zero
 
     private init() {}
 
@@ -51,6 +56,7 @@ final class ExpandedGraphPanelManager {
     func hide() {
         removeOutsideClickMonitor()
         isPinned = false
+        resetPanelPosition()
         panel?.orderOut(nil)
         currentMetric = nil
         self.monitor = nil
@@ -68,11 +74,11 @@ final class ExpandedGraphPanelManager {
         let size = hosting.fittingSize
         panel.setContentSize(size)
 
-        let origin = NSPoint(
+        anchorOrigin = NSPoint(
             x: anchor.midX - size.width / 2,
             y: anchor.minY - size.height - 8
         )
-        panel.setFrameOrigin(origin)
+        panel.setFrameOrigin(anchorOrigin)
         NSApp.activate(ignoringOtherApps: true)
         panel.orderFrontRegardless()
 
@@ -100,11 +106,12 @@ final class ExpandedGraphPanelManager {
         panel.hasShadow = true
         panel.isReleasedWhenClosed = false
         panel.hidesOnDeactivate = false
+        panel.isMovableByWindowBackground = true
         self.panel = panel
         return panel
     }
 
-    private func makeHostingView(in panel: NSPanel) -> NSHostingView<ExpandedGraphView> {
+    private func makeHostingView(in panel: NSPanel) -> DraggableHostingView<ExpandedGraphView> {
         let effectView = NSVisualEffectView()
         effectView.material = .popover
         effectView.blendingMode = .behindWindow
@@ -113,7 +120,7 @@ final class ExpandedGraphPanelManager {
         effectView.layer?.cornerRadius = 10
         effectView.layer?.masksToBounds = true
 
-        let hosting = NSHostingView(
+        let hosting = DraggableHostingView(
             rootView: ExpandedGraphView(metric: .cpu, monitor: SystemMonitor())
         )
         hosting.translatesAutoresizingMaskIntoConstraints = false
@@ -152,5 +159,9 @@ final class ExpandedGraphPanelManager {
             NSEvent.removeMonitor(outsideClickMonitor)
             self.outsideClickMonitor = nil
         }
+    }
+
+    private func resetPanelPosition() {
+        panel?.setFrameOrigin(anchorOrigin)
     }
 }
