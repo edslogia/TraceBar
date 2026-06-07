@@ -16,7 +16,7 @@ enum GraphMetric: Hashable {
         case .cpu: "CPU"
         case .gpu: "GPU"
         case .ram: "RAM"
-        case .network: "Red"
+        case .network: "Network"
         }
     }
 
@@ -47,7 +47,7 @@ enum GraphMetric: Hashable {
         case .ram:
             "RAM: \(SystemMonitor.formatPercent(monitor.ramUsage))"
         case .network:
-            "Red: \(SystemMonitor.formatPercent(monitor.netUsage)) · \(SystemMonitor.formatNetworkSpeed(monitor.netBytesPerSecond))"
+            "Network: \(SystemMonitor.formatNetworkSpeed(monitor.netBytesPerSecond))"
         }
     }
 
@@ -60,11 +60,11 @@ enum GraphMetric: Hashable {
         case .ram:
             SystemMonitor.formatPercent(monitor.ramUsage)
         case .network:
-            "\(SystemMonitor.formatPercent(monitor.netUsage)) · \(SystemMonitor.formatNetworkSpeed(monitor.netBytesPerSecond))"
+            SystemMonitor.formatNetworkSpeed(monitor.netBytesPerSecond)
         }
     }
 
     func subtitle(from monitor: SystemMonitor) -> String? {
-        "Últimos \(SystemMonitor.historyLength)s"
+        "Last \(SystemMonitor.historyLength)s"
     }
 }

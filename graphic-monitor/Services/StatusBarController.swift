@@ -24,7 +24,7 @@ final class StatusBarController: NSObject {
 
     private func configureMenu() {
         let quitItem = NSMenuItem(
-            title: "Salir",
+            title: "Quit",
             action: #selector(quit),
             keyEquivalent: "q"
         )
