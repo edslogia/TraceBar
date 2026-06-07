@@ -10,6 +10,18 @@ private enum MetricCountAnimation {
     static var style: Animation { .linear(duration: duration) }
 }
 
+private enum NetworkSpeedLayout {
+    static let metricFont = Font.system(size: 11, weight: .medium, design: .monospaced)
+    static let arrowWidth: CGFloat = 10
+    static let valueWidth: CGFloat = 36
+    static let mbpsUnitWidth: CGFloat = 28
+    static let speedUnitWidth: CGFloat = 28
+    static let sectionGap: CGFloat = 8
+
+    static let rowWidth: CGFloat =
+        arrowWidth + valueWidth + mbpsUnitWidth + sectionGap + valueWidth + speedUnitWidth
+}
+
 private struct AnimatedPercentText: View, Animatable {
     var percent: Double
 
@@ -25,9 +37,9 @@ private struct AnimatedPercentText: View, Animatable {
     }
 }
 
-private struct AnimatedNetworkDirectionSpeed: View, Animatable {
+private struct AnimatedNetworkMetricValue: View, Animatable {
     var bytesPerSecond: Double
-    let color: Color
+    let value: (Double) -> String
 
     var animatableData: Double {
         get { bytesPerSecond }
@@ -35,18 +47,89 @@ private struct AnimatedNetworkDirectionSpeed: View, Animatable {
     }
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 3) {
-            Text(SystemMonitor.formatNetworkSpeedMbps(bytesPerSecond))
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                .foregroundStyle(color.opacity(0.65))
-                .monospacedDigit()
-                .contentTransition(.numericText())
+        Text(value(bytesPerSecond))
+            .font(NetworkSpeedLayout.metricFont)
+            .monospacedDigit()
+            .contentTransition(.numericText())
+            .frame(width: NetworkSpeedLayout.valueWidth, alignment: .trailing)
+            .lineLimit(1)
+    }
+}
 
-            Text(SystemMonitor.formatNetworkSpeed(bytesPerSecond))
-                .foregroundStyle(color)
-                .monospacedDigit()
-                .contentTransition(.numericText())
+private struct NetworkMetricUnit: View {
+    let text: String
+    let color: Color
+    let width: CGFloat
+
+    var body: some View {
+        Text(text)
+            .font(NetworkSpeedLayout.metricFont)
+            .foregroundStyle(color)
+            .frame(width: width, alignment: .trailing)
+            .lineLimit(1)
+    }
+}
+
+private struct FixedNetworkSpeedUnit: View {
+    let bytesPerSecond: Double
+    let color: Color
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            unitLabel("MB/s", active: bytesPerSecond >= 1_048_576)
+            unitLabel("KB/s", active: bytesPerSecond >= 1024 && bytesPerSecond < 1_048_576)
+            unitLabel("B/s", active: bytesPerSecond < 1024)
         }
+        .frame(width: NetworkSpeedLayout.speedUnitWidth, alignment: .trailing)
+    }
+
+    private func unitLabel(_ text: String, active: Bool) -> some View {
+        Text(text)
+            .font(NetworkSpeedLayout.metricFont)
+            .foregroundStyle(color)
+            .opacity(active ? 1 : 0)
+            .accessibilityHidden(!active)
+    }
+}
+
+private struct AnimatedNetworkDirectionRow: View {
+    let arrow: String
+    let bytesPerSecond: Double
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Text(arrow)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(color)
+                .frame(width: NetworkSpeedLayout.arrowWidth, alignment: .center)
+
+            AnimatedNetworkMetricValue(
+                bytesPerSecond: bytesPerSecond,
+                value: SystemMonitor.networkSpeedMbpsValue
+            )
+            .foregroundStyle(color.opacity(0.65))
+            .animation(MetricCountAnimation.style, value: bytesPerSecond)
+
+            NetworkMetricUnit(
+                text: "Mbps",
+                color: color.opacity(0.65),
+                width: NetworkSpeedLayout.mbpsUnitWidth
+            )
+
+            Color.clear
+                .frame(width: NetworkSpeedLayout.sectionGap)
+
+            AnimatedNetworkMetricValue(
+                bytesPerSecond: bytesPerSecond,
+                value: { SystemMonitor.networkSpeedComponents($0).value }
+            )
+            .foregroundStyle(color.opacity(0.65))
+            .animation(MetricCountAnimation.style, value: bytesPerSecond)
+
+            FixedNetworkSpeedUnit(bytesPerSecond: bytesPerSecond, color: color.opacity(0.65))
+        }
+        .frame(width: NetworkSpeedLayout.rowWidth, alignment: .trailing)
     }
 }
 
@@ -55,29 +138,19 @@ private struct AnimatedNetworkSpeedText: View {
     let uploadBytesPerSecond: Double
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text("↓")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(GraphMetric.downloadColor)
-                AnimatedNetworkDirectionSpeed(
-                    bytesPerSecond: downloadBytesPerSecond,
-                    color: GraphMetric.downloadColor
-                )
-                .animation(MetricCountAnimation.style, value: downloadBytesPerSecond)
-            }
-
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text("↑")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(GraphMetric.uploadColor)
-                AnimatedNetworkDirectionSpeed(
-                    bytesPerSecond: uploadBytesPerSecond,
-                    color: GraphMetric.uploadColor
-                )
-                .animation(MetricCountAnimation.style, value: uploadBytesPerSecond)
-            }
+        VStack(alignment: .trailing, spacing: 2) {
+            AnimatedNetworkDirectionRow(
+                arrow: "↓",
+                bytesPerSecond: downloadBytesPerSecond,
+                color: GraphMetric.downloadColor
+            )
+            AnimatedNetworkDirectionRow(
+                arrow: "↑",
+                bytesPerSecond: uploadBytesPerSecond,
+                color: GraphMetric.uploadColor
+            )
         }
+        .frame(width: NetworkSpeedLayout.rowWidth, alignment: .trailing)
     }
 }
 

@@ -1,0 +1,56 @@
+---
+description: Convenciones Swift/SwiftUI de graphic-monitor
+globs: graphic-monitor/**/*.swift
+alwaysApply: false
+---
+
+# Convenciones Swift
+
+## Estilo de archivo
+
+- Cabecera estándar `//  NombreArchivo.swift` + `//  graphic-monitor`.
+- Secciones con `// MARK: - Título` en clases grandes (p. ej. `SystemMonitor`).
+- `#Preview` al final de vistas SwiftUI con datos de ejemplo.
+
+## Concurrencia y estado
+
+```swift
+// ✅ Modelo de datos en vivo
+@MainActor @Observable final class SystemMonitor { ... }
+
+// ✅ Preferencias persistidas (Combine)
+@MainActor final class GraphStyleStore: ObservableObject { ... }
+
+// ✅ Timer → MainActor
+timer = Timer.scheduledTimer(...) { [weak self] _ in
+    Task { @MainActor in self?.sample() }
+}
+```
+
+- Managers de UI AppKit (`ExpandedGraphPanelManager`, `InstantTooltipManager`): `final class`, `static let shared`, `private init()`.
+- Controladores AppKit (`StatusBarController`): heredan `NSObject`, selectores `@objc`.
+
+## Capas
+
+- **Services/**: Sin SwiftUI salvo `NSHostingView` en `StatusBarController`. Lógica de sistema y ventanas nativas.
+- **Views/**: SwiftUI puro; puente AppKit solo vía `NSViewRepresentable` (`InstantTooltipOverlay`).
+- Formateo de valores: métodos estáticos en `SystemMonitor`; textos de UI por métrica en `GraphMetric`.
+
+## Gráficos
+
+- `StyledMetricGraph` delega en `SparklineShape` / `BarGraphShape` según `GraphStyle`.
+- Red usa serie secundaria (`secondaryData` / `secondaryColor`) para upload.
+- Historial: `removeFirst()` + `append()` con clamp `min(max(value, 0), 1)`.
+
+## AppKit + SwiftUI
+
+- Paneles: `NSPanel` borderless, `nonactivatingPanel`, nivel `.popUpMenu`, fondo `NSVisualEffectView`.
+- Gestos en barra de menú: `InstantTooltipView` (tracking area, swipe >12 px horizontal, tap con umbral de arrastre).
+- Dismiss de panel: monitor global de clic fuera; excluir rect de la barra vía `setDismissExclusionRect`.
+
+## Qué evitar
+
+- No mezclar lógica de lectura Mach/IOKit en vistas.
+- No duplicar colores de métricas fuera de `GraphMetric`.
+- No introducir dependencias externas sin necesidad (proyecto usa solo SDK de Apple).
+- Cambios mínimos y focalizados; sin abstracciones prematuras.

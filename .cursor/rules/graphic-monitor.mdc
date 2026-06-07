@@ -1,0 +1,65 @@
+---
+description: Arquitectura, filosofía y convenciones del proyecto graphic-monitor
+alwaysApply: true
+---
+
+# graphic-monitor
+
+App macOS de **barra de menú** (sin Dock ni ventana principal) que muestra mini-gráficos en tiempo real de CPU, GPU, RAM y red.
+
+## Filosofía
+
+- **Compacta y siempre visible**: 4 sparklines de 38×18 px en la barra; la información densa va en tooltips y panel expandido.
+- **Interacción directa**: tap abre panel, swipe cambia estilo de gráfico; clic derecho en la barra abre menú Quit.
+- **Datos normalizados**: Historial de 30 muestras (1 s); valores en `[0, 1]` para dibujo; formateo en `SystemMonitor` / `GraphMetric`.
+- **AppKit donde SwiftUI no alcanza**: tooltips instantáneos, paneles flotantes y gestos usan `NSPanel` + `NSViewRepresentable`.
+- **Persistencia mínima**: Solo estilos de gráfico por métrica en `UserDefaults` (`GraphStyleStore`).
+
+## Estructura de carpetas
+
+```
+graphic-monitor/
+  graphic_monitorApp.swift   # @main, AppDelegate, atajos ⌘Q
+  Services/                  # Lógica de sistema y barra de menú (AppKit)
+  Views/                     # SwiftUI: gráficos, panel, tooltips, estilos
+scripts/
+  build-and-install.sh       # Build Release + instalar en /Applications
+```
+
+## Flujo principal
+
+```mermaid
+flowchart LR
+  AppDelegate --> StatusBarController
+  StatusBarController --> SystemMonitor
+  StatusBarController --> MenuBarMonitorView
+  MenuBarMonitorView --> MiniGraphView
+  MiniGraphView --> ExpandedGraphPanelManager
+  MiniGraphView --> GraphStyleStore
+  SystemMonitor -->|"Timer 1s"| IOKit_Mach
+```
+
+## Piezas clave
+
+| Pieza | Rol |
+|-------|-----|
+| `SystemMonitor` | Muestreo CPU/GPU/RAM/red vía Mach/IOKit; `@Observable`, `@MainActor` |
+| `GraphMetric` | Enum dominio: color, historial, tooltip, texto de valor por métrica |
+| `GraphStyleStore` | Singleton `ObservableObject`; persiste estilo línea/barras por métrica |
+| `ExpandedGraphPanelManager` | Singleton; panel NSPanel anclado al mini-gráfico; pin y dismiss |
+| `InstantTooltipManager` | Singleton; tooltip flotante al hover en mini-gráficos |
+
+## Build e instalación
+
+```bash
+./scripts/build-and-install.sh
+```
+
+Compila Release en `build/DerivedData`, copia a `/Applications/graphic-monitor.app` y abre la app.
+
+## Al extender el proyecto
+
+- Nueva métrica: extender `GraphMetric`, añadir lectura en `SystemMonitor`, actualizar `MenuBarMonitorView`.
+- Nuevo estilo de gráfico: extender `GraphStyle`, implementar en `StyledMetricGraph` / shapes.
+- Mantener `@MainActor` en código que toque UI o estado observable.
+- No añadir ventana principal ni cambiar `NSApp.setActivationPolicy(.accessory)` sin motivo explícito.

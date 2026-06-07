@@ -20,7 +20,7 @@ struct ExpandedGraphView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: metric == .network ? .top : .firstTextBaseline) {
                 Text(metric.title)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.primary)
@@ -42,6 +42,7 @@ struct ExpandedGraphView: View {
                 AnimatedMetricValueView(metric: metric, monitor: monitor)
                     .font(.system(size: 15, weight: .medium, design: .monospaced))
                     .foregroundStyle(metric.color)
+                    .layoutPriority(1)
             }
 
             GraphStyleCarouselView(metric: metric, styleStore: styleStore) {

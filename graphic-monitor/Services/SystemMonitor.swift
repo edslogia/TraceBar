@@ -70,27 +70,39 @@ final class SystemMonitor {
     }
 
     static func formatNetworkSpeedMbps(_ bytesPerSecond: Double) -> String {
-        let mbps = bytesPerSecond * 8 / 1_000_000
-        if mbps >= 100 {
-            return String(format: "%.0f Mbps", mbps)
-        }
-        if mbps >= 10 {
-            return String(format: "%.1f Mbps", mbps)
-        }
-        if mbps >= 1 {
-            return String(format: "%.1f Mbps", mbps)
-        }
-        return String(format: "%.2f Mbps", mbps)
+        "\(networkSpeedMbpsValue(bytesPerSecond)) Mbps"
+    }
+
+    static func networkSpeedMbpsValue(_ bytesPerSecond: Double) -> String {
+        formattedMetricValue(bytesPerSecond * 8 / 1_000_000)
     }
 
     static func formatNetworkSpeed(_ bytesPerSecond: Double) -> String {
+        let components = networkSpeedComponents(bytesPerSecond)
+        return "\(components.value) \(components.unit)"
+    }
+
+    static func networkSpeedComponents(_ bytesPerSecond: Double) -> (value: String, unit: String) {
         if bytesPerSecond >= 1_048_576 {
-            return String(format: "%.1f MB/s", bytesPerSecond / 1_048_576)
+            return (formattedMetricValue(bytesPerSecond / 1_048_576), "MB/s")
         }
         if bytesPerSecond >= 1024 {
-            return String(format: "%.0f KB/s", bytesPerSecond / 1024)
+            return (formattedMetricValue(bytesPerSecond / 1024), "KB/s")
         }
-        return String(format: "%.0f B/s", bytesPerSecond)
+        return (formattedMetricValue(bytesPerSecond), "B/s")
+    }
+
+    private static func formattedMetricValue(_ value: Double) -> String {
+        if value >= 100 {
+            return String(format: "%.0f", value)
+        }
+        if value >= 10 {
+            return String(format: "%.1f", value)
+        }
+        if value >= 1 {
+            return String(format: "%.1f", value)
+        }
+        return String(format: "%.2f", value)
     }
 
     private func append(_ history: inout [Double], _ value: Double) {

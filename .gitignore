@@ -12,3 +12,4 @@ xcuserdata/
 # Swift Package Manager
 .build/
 .swiftpm/
+.cursor/rules/personal-rules.mdc
