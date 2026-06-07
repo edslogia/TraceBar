@@ -150,6 +150,11 @@ final class InstantTooltipView: NSView {
         trackingArea = area
     }
 
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        addCursorRect(bounds, cursor: .openHand)
+    }
+
     override func mouseEntered(with event: NSEvent) {
         isMouseInside = true
         presentTooltip()
@@ -157,12 +162,18 @@ final class InstantTooltipView: NSView {
 
     override func mouseExited(with event: NSEvent) {
         isMouseInside = false
+        if dragStartPoint != nil {
+            NSCursor.pop()
+            dragStartPoint = nil
+            dragTranslation = .zero
+        }
         Task { @MainActor in
             InstantTooltipManager.shared.hide()
         }
     }
 
     override func mouseDown(with event: NSEvent) {
+        NSCursor.closedHand.push()
         dragStartPoint = convert(event.locationInWindow, from: nil)
         dragTranslation = .zero
     }
@@ -178,6 +189,7 @@ final class InstantTooltipView: NSView {
 
     override func mouseUp(with event: NSEvent) {
         defer {
+            NSCursor.pop()
             dragStartPoint = nil
             dragTranslation = .zero
         }

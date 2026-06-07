@@ -3,6 +3,7 @@
 //  graphic-monitor
 //
 
+import AppKit
 import SwiftUI
 
 struct GraphStyleCarouselView<Background: View>: View {
@@ -52,6 +53,9 @@ struct GraphStyleCarouselView<Background: View>: View {
                             }
                         }
                 )
+                .onHover { inside in
+                    inside ? NSCursor.openHand.push() : NSCursor.pop()
+                }
 
                 HStack {
                     navigationArrow(direction: -1)
@@ -80,6 +84,9 @@ struct GraphStyleCarouselView<Background: View>: View {
                 .background(Circle().fill(Color.black.opacity(0.55)))
         }
         .buttonStyle(.plain)
+        .onHover { inside in
+            inside ? NSCursor.pointingHand.push() : NSCursor.pop()
+        }
         .help(direction < 0 ? "Vista anterior" : "Vista siguiente")
     }
 }

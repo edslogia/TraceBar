@@ -9,6 +9,11 @@ import SwiftUI
 private final class DraggableHostingView<Content: View>: NSHostingView<Content> {
     override var mouseDownCanMoveWindow: Bool { true }
 
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        addCursorRect(bounds, cursor: .openHand)
+    }
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         configureTransparency()

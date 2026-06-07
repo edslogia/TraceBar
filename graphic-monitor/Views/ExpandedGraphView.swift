@@ -3,6 +3,7 @@
 //  graphic-monitor
 //
 
+import AppKit
 import SwiftUI
 
 struct ExpandedGraphView: View {
@@ -35,6 +36,9 @@ struct ExpandedGraphView: View {
                         .frame(width: 20, height: 16)
                 }
                 .buttonStyle(.plain)
+                .onHover { inside in
+                    inside ? NSCursor.pointingHand.push() : NSCursor.pop()
+                }
                 .help(isPinned ? "Desfijar panel" : "Fijar panel")
 
                 Spacer(minLength: 8)
