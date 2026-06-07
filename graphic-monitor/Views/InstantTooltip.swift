@@ -101,6 +101,7 @@ final class InstantTooltipManager {
 struct InstantTooltipOverlay: NSViewRepresentable {
     let text: String
     var onTap: ((NSRect) -> Void)? = nil
+    var onSwipe: ((Int) -> Void)? = nil
 
     func makeNSView(context: Context) -> InstantTooltipView {
         InstantTooltipView()
@@ -109,6 +110,7 @@ struct InstantTooltipOverlay: NSViewRepresentable {
     func updateNSView(_ nsView: InstantTooltipView, context: Context) {
         nsView.text = text
         nsView.onTap = onTap
+        nsView.onSwipe = onSwipe
     }
 }
 
@@ -122,9 +124,12 @@ final class InstantTooltipView: NSView {
     }
 
     var onTap: ((NSRect) -> Void)?
+    var onSwipe: ((Int) -> Void)?
 
     private var trackingArea: NSTrackingArea?
     private var isMouseInside = false
+    private var dragStartPoint: NSPoint?
+    private var dragTranslation: NSPoint = .zero
 
     override var isFlipped: Bool { true }
 
@@ -158,6 +163,39 @@ final class InstantTooltipView: NSView {
     }
 
     override func mouseDown(with event: NSEvent) {
+        dragStartPoint = convert(event.locationInWindow, from: nil)
+        dragTranslation = .zero
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let dragStartPoint else { return }
+        let current = convert(event.locationInWindow, from: nil)
+        dragTranslation = NSPoint(
+            x: current.x - dragStartPoint.x,
+            y: current.y - dragStartPoint.y
+        )
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        defer {
+            dragStartPoint = nil
+            dragTranslation = .zero
+        }
+
+        let horizontal = abs(dragTranslation.x)
+        let vertical = abs(dragTranslation.y)
+
+        if horizontal > 12, horizontal > vertical * 1.2, let onSwipe {
+            InstantTooltipManager.shared.hide()
+            let direction = dragTranslation.x < 0 ? 1 : -1
+            Task { @MainActor in
+                onSwipe(direction)
+            }
+            return
+        }
+
+        if horizontal > 6 || vertical > 6 { return }
+
         guard let onTap, let window else { return }
         InstantTooltipManager.shared.hide()
         let screenRect = window.convertToScreen(convert(bounds, to: nil))

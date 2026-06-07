@@ -5,11 +5,30 @@
 
 import SwiftUI
 
-enum GraphMetric: Hashable {
+enum GraphMetric: Hashable, CaseIterable {
     case cpu
     case gpu
     case ram
     case network
+
+    var storageKey: String {
+        switch self {
+        case .cpu: "cpu"
+        case .gpu: "gpu"
+        case .ram: "ram"
+        case .network: "network"
+        }
+    }
+
+    init?(storageKey: String) {
+        switch storageKey {
+        case "cpu": self = .cpu
+        case "gpu": self = .gpu
+        case "ram": self = .ram
+        case "network": self = .network
+        default: return nil
+        }
+    }
 
     var title: String {
         switch self {

@@ -7,6 +7,7 @@ import SwiftUI
 
 struct MenuBarMonitorView: View {
     let monitor: SystemMonitor
+    @ObservedObject private var styleStore = GraphStyleStore.shared
 
     var body: some View {
         HStack(spacing: 3) {
@@ -24,6 +25,7 @@ struct MenuBarMonitorView: View {
             data: metric.history(from: monitor),
             color: metric.color,
             tooltip: metric.tooltip(from: monitor),
+            style: styleStore.style(for: metric),
             secondaryData: metric.secondaryHistory(from: monitor),
             secondaryColor: metric.secondaryColor(),
             onTap: { anchor in
@@ -32,6 +34,9 @@ struct MenuBarMonitorView: View {
                     monitor: monitor,
                     anchor: anchor
                 )
+            },
+            onSwipe: { direction in
+                styleStore.cycleStyle(for: metric, direction: direction)
             }
         )
     }

@@ -9,6 +9,7 @@ struct ExpandedGraphView: View {
     let metric: GraphMetric
     let monitor: SystemMonitor
 
+    @ObservedObject private var styleStore = GraphStyleStore.shared
     @State private var isPinned: Bool
 
     init(metric: GraphMetric, monitor: SystemMonitor) {
@@ -43,29 +44,23 @@ struct ExpandedGraphView: View {
                     .foregroundStyle(metric.color)
             }
 
-            ZStack {
+            GraphStyleCarouselView(metric: metric, styleStore: styleStore) {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(Color(white: 0.10))
-
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(metric.color.opacity(0.45), lineWidth: 1)
-
-                SparklineShape(values: metric.history(from: monitor))
-                    .stroke(
-                        metric.color,
-                        style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round)
-                    )
-                    .padding(10)
-
-                if let secondaryHistory = metric.secondaryHistory(from: monitor),
-                   let secondaryColor = metric.secondaryColor() {
-                    SparklineShape(values: secondaryHistory)
-                        .stroke(
-                            secondaryColor,
-                            style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round)
-                        )
-                        .padding(10)
-                }
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(metric.color.opacity(0.45), lineWidth: 1)
+                    }
+            } graphContent: { style in
+                StyledMetricGraph(
+                    values: metric.history(from: monitor),
+                    color: metric.color,
+                    style: style,
+                    secondaryValues: metric.secondaryHistory(from: monitor),
+                    secondaryColor: metric.secondaryColor(),
+                    lineWidth: 2.2,
+                    padding: 10
+                )
             }
             .frame(height: 96)
 
@@ -78,7 +73,7 @@ struct ExpandedGraphView: View {
 
                 Spacer(minLength: 8)
 
-                Text("Press ⌘Q to quit")
+                Text("Flechas o desliza para cambiar vista · ⌘Q para salir")
                     .font(.system(size: 10))
                     .foregroundStyle(.tertiary)
             }

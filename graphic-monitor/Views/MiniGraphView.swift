@@ -9,9 +9,11 @@ struct MiniGraphView: View {
     let data: [Double]
     let color: Color
     let tooltip: String
+    let style: GraphStyle
     var secondaryData: [Double]? = nil
     var secondaryColor: Color? = nil
     var onTap: ((NSRect) -> Void)? = nil
+    var onSwipe: ((Int) -> Void)? = nil
 
     var body: some View {
         ZStack {
@@ -22,20 +24,20 @@ struct MiniGraphView: View {
                         .strokeBorder(color.opacity(0.6), lineWidth: 0.75)
                 }
 
-            SparklineShape(values: data)
-                .stroke(color, style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
-                .padding(2)
-
-            if let secondaryData, let secondaryColor {
-                SparklineShape(values: secondaryData)
-                    .stroke(secondaryColor, style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
-                    .padding(2)
-            }
+            StyledMetricGraph(
+                values: data,
+                color: color,
+                style: style,
+                secondaryValues: secondaryData,
+                secondaryColor: secondaryColor,
+                lineWidth: 1.2,
+                padding: 2
+            )
         }
         .frame(width: 38, height: 18)
         .contentShape(Rectangle())
         .overlay {
-            InstantTooltipOverlay(text: tooltip, onTap: onTap)
+            InstantTooltipOverlay(text: tooltip, onTap: onTap, onSwipe: onSwipe)
         }
     }
 }
@@ -45,12 +47,14 @@ struct MiniGraphView: View {
         MiniGraphView(
             data: [0.1, 0.3, 0.5, 0.8, 0.4, 0.6, 0.9, 0.2],
             color: Color(red: 0.45, green: 0.82, blue: 0.09),
-            tooltip: "CPU: 45%"
+            tooltip: "CPU: 45%",
+            style: .line
         )
         MiniGraphView(
             data: [0.2, 0.4, 0.3, 0.7, 0.5, 0.6, 0.4, 0.8],
             color: Color(red: 0.99, green: 0.69, blue: 0.24),
-            tooltip: "GPU: 12%"
+            tooltip: "GPU: 12%",
+            style: .bars
         )
     }
     .padding()
