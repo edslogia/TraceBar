@@ -18,7 +18,7 @@ struct ExpandedGraphView: View {
 
                 Spacer(minLength: 8)
 
-                Text(metric.valueText(from: monitor))
+                AnimatedMetricValueView(metric: metric, monitor: monitor)
                     .font(.system(size: 15, weight: .medium, design: .monospaced))
                     .foregroundStyle(metric.color)
             }
