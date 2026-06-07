@@ -19,6 +19,10 @@ final class ExpandedGraphPanelManager {
 
     private init() {}
 
+    var isPanelVisible: Bool {
+        panel?.isVisible == true
+    }
+
     func setDismissExclusionRect(_ provider: @escaping () -> NSRect) {
         dismissExclusionRect = provider
     }
@@ -56,6 +60,7 @@ final class ExpandedGraphPanelManager {
             y: anchor.minY - size.height - 8
         )
         panel.setFrameOrigin(origin)
+        NSApp.activate(ignoringOtherApps: true)
         panel.orderFrontRegardless()
 
         self.currentMetric = metric

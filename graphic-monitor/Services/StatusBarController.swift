@@ -67,6 +67,7 @@ final class StatusBarController: NSObject {
     @objc private func handleClick(_ sender: NSStatusBarButton) {
         guard let event = NSApp.currentEvent, event.type == .rightMouseUp else { return }
 
+        NSApp.activate(ignoringOtherApps: true)
         menu.popUp(
             positioning: nil,
             at: NSPoint(x: 0, y: sender.bounds.height + 4),
