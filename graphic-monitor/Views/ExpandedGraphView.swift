@@ -73,7 +73,7 @@ struct ExpandedGraphView: View {
 
                 Spacer(minLength: 8)
 
-                Text("Flechas o desliza para cambiar vista · ⌘Q para salir")
+                Text("⌘Q to quit")
                     .font(.system(size: 10))
                     .foregroundStyle(.tertiary)
             }
