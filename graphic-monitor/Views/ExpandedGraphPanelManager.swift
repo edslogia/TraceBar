@@ -67,6 +67,7 @@ final class ExpandedGraphPanelManager {
 
         let panel = self.panel ?? makePanel()
         let hosting = self.hostingView ?? makeHostingView(in: panel)
+        let keepPosition = panel.isVisible && isPinned
 
         hosting.rootView = ExpandedGraphView(metric: metric, monitor: monitor)
         hosting.layoutSubtreeIfNeeded()
@@ -78,7 +79,9 @@ final class ExpandedGraphPanelManager {
             x: anchor.midX - size.width / 2,
             y: anchor.minY - size.height - 8
         )
-        panel.setFrameOrigin(anchorOrigin)
+        if !keepPosition {
+            panel.setFrameOrigin(anchorOrigin)
+        }
         NSApp.activate(ignoringOtherApps: true)
         panel.orderFrontRegardless()
 
