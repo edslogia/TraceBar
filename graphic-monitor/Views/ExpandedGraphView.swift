@@ -39,10 +39,18 @@ struct ExpandedGraphView: View {
             }
             .frame(height: 96)
 
-            if let subtitle = metric.subtitle(from: monitor) {
-                Text(subtitle)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline) {
+                if let subtitle = metric.subtitle(from: monitor) {
+                    Text(subtitle)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 8)
+
+                Text("Press ⌘Q to quit")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
             }
         }
         .padding(14)
