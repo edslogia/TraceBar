@@ -11,6 +11,7 @@ App macOS de **barra de menú** (sin Dock ni ventana principal) que muestra mini
 
 - **Compacta y siempre visible**: 4 sparklines de 38×18 px en la barra; la información densa va en tooltips y panel expandido.
 - **Interacción directa**: tap abre panel, swipe cambia estilo de gráfico; clic derecho en la barra abre menú Quit.
+- **Cursor como pista**: el puntero cambia en hover según la acción (mano para clic, mano abierta para swipe, flecha por defecto); ver `personal-rules.mdc` y `swift-conventions.mdc`.
 - **Datos normalizados**: Historial de 30 muestras (1 s); valores en `[0, 1]` para dibujo; formateo en `SystemMonitor` / `GraphMetric`.
 - **AppKit donde SwiftUI no alcanza**: tooltips instantáneos, paneles flotantes y gestos usan `NSPanel` + `NSViewRepresentable`.
 - **Persistencia mínima**: Solo estilos de gráfico por métrica en `UserDefaults` (`GraphStyleStore`).

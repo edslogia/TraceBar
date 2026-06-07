@@ -48,6 +48,26 @@ timer = Timer.scheduledTimer(...) { [weak self] _ in
 - Gestos en barra de menú: `InstantTooltipView` (tracking area, swipe >12 px horizontal, tap con umbral de arrastre).
 - Dismiss de panel: monitor global de clic fuera; excluir rect de la barra vía `setDismissExclusionRect`.
 
+## Cursor por acción (hover)
+
+Seguir la tabla de `personal-rules.mdc`. Implementación habitual en este proyecto:
+
+```swift
+// SwiftUI — clic o botón
+.onHover { inside in
+    inside ? NSCursor.pointingHand.push() : NSCursor.pop()
+}
+
+// SwiftUI — zona con swipe/arrastre (p. ej. GraphStyleCarouselView, mini-gráficos)
+.onHover { inside in
+    inside ? NSCursor.openHand.push() : NSCursor.pop()
+}
+```
+
+- En `NSViewRepresentable` / AppKit: `resetCursorRects` o `cursorUpdate(with:)` en la vista que recibe el tracking.
+- Botones SwiftUI con `.buttonStyle(.plain)`: el hover del cursor no viene gratis; añadirlo explícitamente.
+- `push()` / `pop()` en pares; evitar `set()` suelto que no se revierte al salir del área.
+
 ## Qué evitar
 
 - No mezclar lógica de lectura Mach/IOKit en vistas.
