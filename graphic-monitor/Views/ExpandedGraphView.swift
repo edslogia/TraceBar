@@ -9,12 +9,32 @@ struct ExpandedGraphView: View {
     let metric: GraphMetric
     let monitor: SystemMonitor
 
+    @State private var isPinned: Bool
+
+    init(metric: GraphMetric, monitor: SystemMonitor) {
+        self.metric = metric
+        self.monitor = monitor
+        _isPinned = State(initialValue: ExpandedGraphPanelManager.shared.isPinned)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text(metric.title)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.primary)
+
+                Button {
+                    isPinned.toggle()
+                    ExpandedGraphPanelManager.shared.setPinned(isPinned)
+                } label: {
+                    Image(systemName: isPinned ? "pin.fill" : "pin")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(isPinned ? metric.color : Color.secondary)
+                        .frame(width: 20, height: 16)
+                }
+                .buttonStyle(.plain)
+                .help(isPinned ? "Desfijar panel" : "Fijar panel")
 
                 Spacer(minLength: 8)
 

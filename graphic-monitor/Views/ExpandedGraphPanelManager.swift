@@ -16,11 +16,23 @@ final class ExpandedGraphPanelManager {
     private weak var monitor: SystemMonitor?
     private var outsideClickMonitor: Any?
     private var dismissExclusionRect: (() -> NSRect)?
+    private(set) var isPinned = false
 
     private init() {}
 
     var isPanelVisible: Bool {
         panel?.isVisible == true
+    }
+
+    func setPinned(_ pinned: Bool) {
+        isPinned = pinned
+        guard let panel, panel.isVisible else { return }
+
+        if pinned {
+            removeOutsideClickMonitor()
+        } else {
+            installOutsideClickMonitor(for: panel)
+        }
     }
 
     func setDismissExclusionRect(_ provider: @escaping () -> NSRect) {
@@ -38,6 +50,7 @@ final class ExpandedGraphPanelManager {
 
     func hide() {
         removeOutsideClickMonitor()
+        isPinned = false
         panel?.orderOut(nil)
         currentMetric = nil
         self.monitor = nil
@@ -65,7 +78,12 @@ final class ExpandedGraphPanelManager {
 
         self.currentMetric = metric
         self.monitor = monitor
-        installOutsideClickMonitor(for: panel)
+
+        if isPinned {
+            removeOutsideClickMonitor()
+        } else {
+            installOutsideClickMonitor(for: panel)
+        }
     }
 
     private func makePanel() -> NSPanel {
