@@ -11,6 +11,7 @@ final class InstantTooltipManager {
     static let shared = InstantTooltipManager()
 
     private var panel: NSPanel?
+    private var effectView: NSVisualEffectView?
     private var label: NSTextField?
 
     private init() {}
@@ -19,17 +20,19 @@ final class InstantTooltipManager {
         guard !text.isEmpty else { return }
 
         let panel = self.panel ?? makePanel()
-        let label = self.label ?? makeLabel(in: panel)
+        let effectView = self.effectView ?? makeEffectView(in: panel)
+        let label = self.label ?? makeLabel(in: effectView)
 
         label.stringValue = text
         label.sizeToFit()
 
-        let padding = NSEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+        let padding = NSEdgeInsets(top: 3, left: 6, bottom: 3, right: 6)
         let size = NSSize(
             width: label.frame.width + padding.left + padding.right,
             height: label.frame.height + padding.top + padding.bottom
         )
 
+        effectView.frame = NSRect(origin: .zero, size: size)
         panel.setContentSize(size)
         label.frame = NSRect(
             x: padding.left,
@@ -40,7 +43,7 @@ final class InstantTooltipManager {
 
         let origin = NSPoint(
             x: anchor.midX - size.width / 2,
-            y: anchor.minY - size.height - 6
+            y: anchor.minY - size.height - 4
         )
         panel.setFrameOrigin(origin)
         panel.orderFrontRegardless()
@@ -59,7 +62,7 @@ final class InstantTooltipManager {
         )
         panel.isFloatingPanel = true
         panel.level = .popUpMenu
-        panel.backgroundColor = NSColor(white: 0.12, alpha: 0.95)
+        panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = true
         panel.isReleasedWhenClosed = false
@@ -68,15 +71,28 @@ final class InstantTooltipManager {
         return panel
     }
 
-    private func makeLabel(in panel: NSPanel) -> NSTextField {
+    private func makeEffectView(in panel: NSPanel) -> NSVisualEffectView {
+        let effectView = NSVisualEffectView()
+        effectView.material = .toolTip
+        effectView.blendingMode = .behindWindow
+        effectView.state = .active
+        effectView.wantsLayer = true
+        effectView.layer?.cornerRadius = 5
+        effectView.layer?.masksToBounds = true
+        panel.contentView = effectView
+        self.effectView = effectView
+        return effectView
+    }
+
+    private func makeLabel(in effectView: NSVisualEffectView) -> NSTextField {
         let label = NSTextField(labelWithString: "")
-        label.font = .monospacedSystemFont(ofSize: 11, weight: .medium)
-        label.textColor = .white
+        label.font = .systemFont(ofSize: 11)
+        label.textColor = .labelColor
         label.backgroundColor = .clear
         label.isBezeled = false
         label.isEditable = false
         label.isSelectable = false
-        panel.contentView?.addSubview(label)
+        effectView.addSubview(label)
         self.label = label
         return label
     }
@@ -84,6 +100,7 @@ final class InstantTooltipManager {
 
 struct InstantTooltipOverlay: NSViewRepresentable {
     let text: String
+    var onTap: ((NSRect) -> Void)? = nil
 
     func makeNSView(context: Context) -> InstantTooltipView {
         InstantTooltipView()
@@ -91,6 +108,7 @@ struct InstantTooltipOverlay: NSViewRepresentable {
 
     func updateNSView(_ nsView: InstantTooltipView, context: Context) {
         nsView.text = text
+        nsView.onTap = onTap
     }
 }
 
@@ -102,6 +120,8 @@ final class InstantTooltipView: NSView {
             }
         }
     }
+
+    var onTap: ((NSRect) -> Void)?
 
     private var trackingArea: NSTrackingArea?
     private var isMouseInside = false
@@ -134,6 +154,15 @@ final class InstantTooltipView: NSView {
         isMouseInside = false
         Task { @MainActor in
             InstantTooltipManager.shared.hide()
+        }
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        guard let onTap, let window else { return }
+        InstantTooltipManager.shared.hide()
+        let screenRect = window.convertToScreen(convert(bounds, to: nil))
+        Task { @MainActor in
+            onTap(screenRect)
         }
     }
 

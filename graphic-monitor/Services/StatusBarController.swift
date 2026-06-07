@@ -57,6 +57,11 @@ final class StatusBarController: NSObject {
             hosting.heightAnchor.constraint(equalToConstant: 18),
             hosting.widthAnchor.constraint(equalToConstant: 164),
         ])
+
+        ExpandedGraphPanelManager.shared.setDismissExclusionRect { [weak button] in
+            guard let button, let window = button.window else { return .zero }
+            return window.convertToScreen(button.convert(button.bounds, to: nil))
+        }
     }
 
     @objc private func handleClick(_ sender: NSStatusBarButton) {
