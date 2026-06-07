@@ -47,7 +47,7 @@ struct ExpandedGraphView: View {
 
             GraphStyleCarouselView(metric: metric, styleStore: styleStore) {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(white: 0.10))
+                    .fill(.thinMaterial)
                     .overlay {
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .strokeBorder(metric.color.opacity(0.45), lineWidth: 1)
@@ -81,6 +81,14 @@ struct ExpandedGraphView: View {
         }
         .padding(14)
         .frame(width: 300)
+        .background {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(.regularMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(.white.opacity(0.12), lineWidth: 0.5)
+                }
+        }
     }
 }
 

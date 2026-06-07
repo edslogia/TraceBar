@@ -8,6 +8,22 @@ import SwiftUI
 
 private final class DraggableHostingView<Content: View>: NSHostingView<Content> {
     override var mouseDownCanMoveWindow: Bool { true }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        configureTransparency()
+    }
+
+    override func layout() {
+        super.layout()
+        configureTransparency()
+    }
+
+    private func configureTransparency() {
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.clear.cgColor
+        layer?.isOpaque = false
+    }
 }
 
 @MainActor
@@ -115,28 +131,10 @@ final class ExpandedGraphPanelManager {
     }
 
     private func makeHostingView(in panel: NSPanel) -> DraggableHostingView<ExpandedGraphView> {
-        let effectView = NSVisualEffectView()
-        effectView.material = .popover
-        effectView.blendingMode = .behindWindow
-        effectView.state = .active
-        effectView.wantsLayer = true
-        effectView.layer?.cornerRadius = 10
-        effectView.layer?.masksToBounds = true
-
         let hosting = DraggableHostingView(
             rootView: ExpandedGraphView(metric: .cpu, monitor: SystemMonitor())
         )
-        hosting.translatesAutoresizingMaskIntoConstraints = false
-        effectView.addSubview(hosting)
-
-        NSLayoutConstraint.activate([
-            hosting.leadingAnchor.constraint(equalTo: effectView.leadingAnchor),
-            hosting.trailingAnchor.constraint(equalTo: effectView.trailingAnchor),
-            hosting.topAnchor.constraint(equalTo: effectView.topAnchor),
-            hosting.bottomAnchor.constraint(equalTo: effectView.bottomAnchor),
-        ])
-
-        panel.contentView = effectView
+        panel.contentView = hosting
         self.hostingView = hosting
         return hosting
     }
