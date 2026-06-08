@@ -1,5 +1,8 @@
 # TraceBar
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-%241%2B-pink?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/edslogia)
+
 A macOS **menu bar** app that shows real-time mini charts for CPU, GPU, RAM, and network. No Dock icon: it lives in the top bar next to the clock and other system indicators.
 
 ## Table of contents
@@ -12,6 +15,8 @@ A macOS **menu bar** app that shows real-time mini charts for CPU, GPU, RAM, and
 - [Shortcuts and menu](#shortcuts-and-menu)
 - [Persistence](#persistence)
 - [Project structure](#project-structure)
+- [Support this project](#support-this-project)
+- [License](#license)
 
 ## What you can do
 
@@ -100,6 +105,24 @@ scripts/
 ```
 
 Stack: Swift, SwiftUI, AppKit (`NSPanel`, native tooltips). No external dependencies.
+
+## Support this project
+
+TraceBar is free and open source. If it saves you time or you use it daily, consider [sponsoring on GitHub](https://github.com/sponsors/edslogia) — **from $1/month**.
+
+Your support helps keep the project maintained: bug fixes, macOS compatibility updates, and new metrics or chart styles. Every tier counts, whether it is a coffee-sized contribution or ongoing sponsorship.
+
+| | |
+|---|---|
+| **Sponsor** | [github.com/sponsors/edslogia](https://github.com/sponsors/edslogia) |
+| **Minimum** | $1 USD / month |
+| **What you get** | A maintained menu bar monitor you can build, fork, and trust on your Mac |
+
+You can also star the repo or open issues and pull requests — that helps too.
+
+## License
+
+This project is released under the [MIT License](LICENSE). You are free to use, modify, and distribute it, including for commercial purposes, as long as you include the copyright notice.
 
 ---
 
