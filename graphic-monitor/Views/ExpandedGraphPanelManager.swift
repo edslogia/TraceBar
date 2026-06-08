@@ -4,6 +4,7 @@
 //
 
 import AppKit
+import Combine
 import SwiftUI
 
 private final class DraggableHostingView<Content: View>: NSHostingView<Content> {
@@ -32,12 +33,13 @@ private final class DraggableHostingView<Content: View>: NSHostingView<Content> 
 }
 
 @MainActor
-final class ExpandedGraphPanelManager {
+final class ExpandedGraphPanelManager: ObservableObject {
     static let shared = ExpandedGraphPanelManager()
+
+    @Published private(set) var displayedMetric: GraphMetric = .cpu
 
     private var panel: NSPanel?
     private var hostingView: DraggableHostingView<ExpandedGraphView>?
-    private var currentMetric: GraphMetric?
     private weak var monitor: SystemMonitor?
     private var outsideClickMonitor: Any?
     private var dismissExclusionRect: (() -> NSRect)?
@@ -65,8 +67,13 @@ final class ExpandedGraphPanelManager {
         dismissExclusionRect = provider
     }
 
+    func selectMetric(_ metric: GraphMetric) {
+        guard displayedMetric != metric else { return }
+        displayedMetric = metric
+    }
+
     func toggle(metric: GraphMetric, monitor: SystemMonitor, anchor: NSRect) {
-        if panel?.isVisible == true, currentMetric == metric {
+        if panel?.isVisible == true, displayedMetric == metric {
             hide()
             return
         }
@@ -79,18 +86,22 @@ final class ExpandedGraphPanelManager {
         isPinned = false
         resetPanelPosition()
         panel?.orderOut(nil)
-        currentMetric = nil
         self.monitor = nil
     }
 
     private func show(metric: GraphMetric, monitor: SystemMonitor, anchor: NSRect) {
         InstantTooltipManager.shared.hide()
 
+        displayedMetric = metric
+
         let panel = self.panel ?? makePanel()
-        let hosting = self.hostingView ?? makeHostingView(in: panel)
+        let hosting = self.hostingView ?? makeHostingView(in: panel, monitor: monitor)
         let keepPosition = panel.isVisible && isPinned
 
-        hosting.rootView = ExpandedGraphView(metric: metric, monitor: monitor)
+        if self.monitor !== monitor {
+            hosting.rootView = ExpandedGraphView(monitor: monitor)
+        }
+
         hosting.layoutSubtreeIfNeeded()
 
         let size = hosting.fittingSize
@@ -106,7 +117,6 @@ final class ExpandedGraphPanelManager {
         NSApp.activate(ignoringOtherApps: true)
         panel.orderFrontRegardless()
 
-        self.currentMetric = metric
         self.monitor = monitor
 
         if isPinned {
@@ -135,9 +145,12 @@ final class ExpandedGraphPanelManager {
         return panel
     }
 
-    private func makeHostingView(in panel: NSPanel) -> DraggableHostingView<ExpandedGraphView> {
+    private func makeHostingView(
+        in panel: NSPanel,
+        monitor: SystemMonitor
+    ) -> DraggableHostingView<ExpandedGraphView> {
         let hosting = DraggableHostingView(
-            rootView: ExpandedGraphView(metric: .cpu, monitor: SystemMonitor())
+            rootView: ExpandedGraphView(monitor: monitor)
         )
         panel.contentView = hosting
         self.hostingView = hosting

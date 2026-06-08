@@ -101,7 +101,6 @@ final class InstantTooltipManager {
 struct InstantTooltipOverlay: NSViewRepresentable {
     let text: String
     var onTap: ((NSRect) -> Void)? = nil
-    var onSwipe: ((Int) -> Void)? = nil
 
     func makeNSView(context: Context) -> InstantTooltipView {
         InstantTooltipView()
@@ -110,7 +109,6 @@ struct InstantTooltipOverlay: NSViewRepresentable {
     func updateNSView(_ nsView: InstantTooltipView, context: Context) {
         nsView.text = text
         nsView.onTap = onTap
-        nsView.onSwipe = onSwipe
     }
 }
 
@@ -124,12 +122,10 @@ final class InstantTooltipView: NSView {
     }
 
     var onTap: ((NSRect) -> Void)?
-    var onSwipe: ((Int) -> Void)?
 
     private var trackingArea: NSTrackingArea?
     private var isMouseInside = false
     private var dragStartPoint: NSPoint?
-    private var dragTranslation: NSPoint = .zero
 
     override var isFlipped: Bool { true }
 
@@ -152,7 +148,7 @@ final class InstantTooltipView: NSView {
 
     override func resetCursorRects() {
         super.resetCursorRects()
-        addCursorRect(bounds, cursor: .openHand)
+        addCursorRect(bounds, cursor: .pointingHand)
     }
 
     override func mouseEntered(with event: NSEvent) {
@@ -162,51 +158,24 @@ final class InstantTooltipView: NSView {
 
     override func mouseExited(with event: NSEvent) {
         isMouseInside = false
-        if dragStartPoint != nil {
-            NSCursor.pop()
-            dragStartPoint = nil
-            dragTranslation = .zero
-        }
+        dragStartPoint = nil
         Task { @MainActor in
             InstantTooltipManager.shared.hide()
         }
     }
 
     override func mouseDown(with event: NSEvent) {
-        NSCursor.closedHand.push()
         dragStartPoint = convert(event.locationInWindow, from: nil)
-        dragTranslation = .zero
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        guard let dragStartPoint else { return }
-        let current = convert(event.locationInWindow, from: nil)
-        dragTranslation = NSPoint(
-            x: current.x - dragStartPoint.x,
-            y: current.y - dragStartPoint.y
-        )
     }
 
     override func mouseUp(with event: NSEvent) {
-        defer {
-            NSCursor.pop()
-            dragStartPoint = nil
-            dragTranslation = .zero
-        }
+        defer { dragStartPoint = nil }
 
-        let horizontal = abs(dragTranslation.x)
-        let vertical = abs(dragTranslation.y)
-
-        if horizontal > 12, horizontal > vertical * 1.2, let onSwipe {
-            InstantTooltipManager.shared.hide()
-            let direction = dragTranslation.x < 0 ? 1 : -1
-            Task { @MainActor in
-                onSwipe(direction)
-            }
-            return
-        }
-
-        if horizontal > 6 || vertical > 6 { return }
+        guard let dragStartPoint else { return }
+        let current = convert(event.locationInWindow, from: nil)
+        let deltaX = abs(current.x - dragStartPoint.x)
+        let deltaY = abs(current.y - dragStartPoint.y)
+        guard deltaX <= 6, deltaY <= 6 else { return }
 
         guard let onTap, let window else { return }
         InstantTooltipManager.shared.hide()

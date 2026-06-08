@@ -103,4 +103,11 @@ enum GraphMetric: Hashable, CaseIterable {
     func subtitle(from monitor: SystemMonitor) -> String? {
         "Last \(SystemMonitor.historyLength)s"
     }
+
+    func adjacentMetric(offset: Int) -> GraphMetric {
+        let all = Self.allCases
+        guard let index = all.firstIndex(of: self) else { return self }
+        let nextIndex = (index + offset + all.count) % all.count
+        return all[nextIndex]
+    }
 }

@@ -13,7 +13,6 @@ struct MiniGraphView: View {
     var secondaryData: [Double]? = nil
     var secondaryColor: Color? = nil
     var onTap: ((NSRect) -> Void)? = nil
-    var onSwipe: ((Int) -> Void)? = nil
 
     var body: some View {
         ZStack {
@@ -37,7 +36,7 @@ struct MiniGraphView: View {
         .frame(width: 38, height: 18)
         .contentShape(Rectangle())
         .overlay {
-            InstantTooltipOverlay(text: tooltip, onTap: onTap, onSwipe: onSwipe)
+            InstantTooltipOverlay(text: tooltip, onTap: onTap)
         }
     }
 }

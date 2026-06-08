@@ -42,11 +42,9 @@ final class GraphStyleStore: ObservableObject {
         persist()
     }
 
-    func cycleStyle(for metric: GraphMetric, direction: Int) {
-        let all = GraphStyle.allCases
-        guard let currentIndex = all.firstIndex(of: style(for: metric)) else { return }
-        let nextIndex = (currentIndex + direction + all.count) % all.count
-        setStyle(all[nextIndex], for: metric)
+    func toggleStyle(for metric: GraphMetric) {
+        let next: GraphStyle = style(for: metric) == .line ? .bars : .line
+        setStyle(next, for: metric)
     }
 
     private func persist() {

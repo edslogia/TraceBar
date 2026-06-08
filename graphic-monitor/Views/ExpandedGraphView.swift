@@ -7,24 +7,48 @@ import AppKit
 import SwiftUI
 
 struct ExpandedGraphView: View {
-    let metric: GraphMetric
     let monitor: SystemMonitor
 
+    @ObservedObject private var panelManager = ExpandedGraphPanelManager.shared
     @ObservedObject private var styleStore = GraphStyleStore.shared
     @State private var isPinned: Bool
 
-    init(metric: GraphMetric, monitor: SystemMonitor) {
-        self.metric = metric
+    init(monitor: SystemMonitor) {
         self.monitor = monitor
         _isPinned = State(initialValue: ExpandedGraphPanelManager.shared.isPinned)
     }
 
+    private var displayedMetric: GraphMetric {
+        panelManager.displayedMetric
+    }
+
+    private var displayedMetricBinding: Binding<GraphMetric> {
+        Binding(
+            get: { panelManager.displayedMetric },
+            set: { panelManager.selectMetric($0) }
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: metric == .network ? .top : .firstTextBaseline) {
-                Text(metric.title)
+            HStack(alignment: displayedMetric == .network ? .top : .firstTextBaseline) {
+                Text(displayedMetric.title)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.primary)
+
+                Button {
+                    styleStore.toggleStyle(for: displayedMetric)
+                } label: {
+                    Image(systemName: styleStore.style(for: displayedMetric).systemImage)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(displayedMetric.color)
+                        .frame(width: 20, height: 16)
+                }
+                .buttonStyle(.plain)
+                .onHover { inside in
+                    inside ? NSCursor.pointingHand.push() : NSCursor.pop()
+                }
+                .help(styleToggleHelp)
 
                 Button {
                     isPinned.toggle()
@@ -32,7 +56,7 @@ struct ExpandedGraphView: View {
                 } label: {
                     Image(systemName: isPinned ? "pin.fill" : "pin")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(isPinned ? metric.color : Color.secondary)
+                        .foregroundStyle(isPinned ? displayedMetric.color : Color.secondary)
                         .frame(width: 20, height: 16)
                 }
                 .buttonStyle(.plain)
@@ -43,34 +67,21 @@ struct ExpandedGraphView: View {
 
                 Spacer(minLength: 8)
 
-                AnimatedMetricValueView(metric: metric, monitor: monitor)
+                AnimatedMetricValueView(metric: displayedMetric, monitor: monitor)
                     .font(.system(size: 15, weight: .medium, design: .monospaced))
-                    .foregroundStyle(metric.color)
+                    .foregroundStyle(displayedMetric.color)
                     .layoutPriority(1)
             }
 
-            GraphStyleCarouselView(metric: metric, styleStore: styleStore) {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(.thinMaterial)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(metric.color.opacity(0.45), lineWidth: 1)
-                    }
-            } graphContent: { style in
-                StyledMetricGraph(
-                    values: metric.history(from: monitor),
-                    color: metric.color,
-                    style: style,
-                    secondaryValues: metric.secondaryHistory(from: monitor),
-                    secondaryColor: metric.secondaryColor(),
-                    lineWidth: 2.2,
-                    padding: 10
-                )
-            }
+            ExpandedMetricCarouselView(
+                metric: displayedMetricBinding,
+                styleStore: styleStore,
+                monitor: monitor
+            )
             .frame(height: 96)
 
             HStack(alignment: .firstTextBaseline) {
-                if let subtitle = metric.subtitle(from: monitor) {
+                if let subtitle = displayedMetric.subtitle(from: monitor) {
                     Text(subtitle)
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
@@ -94,9 +105,18 @@ struct ExpandedGraphView: View {
                 }
         }
     }
+
+    private var styleToggleHelp: String {
+        let current = styleStore.style(for: displayedMetric)
+        let next = current == .line ? GraphStyle.bars : GraphStyle.line
+        return "Vista \(current.title.lowercased()) · clic para \(next.title.lowercased())"
+    }
 }
 
 #Preview {
-    ExpandedGraphView(metric: .cpu, monitor: SystemMonitor())
+    ExpandedGraphView(monitor: SystemMonitor())
         .padding()
+        .onAppear {
+            ExpandedGraphPanelManager.shared.selectMetric(.cpu)
+        }
 }

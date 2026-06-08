@@ -34,9 +34,6 @@ struct MenuBarMonitorView: View {
                     monitor: monitor,
                     anchor: anchor
                 )
-            },
-            onSwipe: { direction in
-                styleStore.cycleStyle(for: metric, direction: direction)
             }
         )
     }
