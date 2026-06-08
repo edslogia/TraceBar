@@ -1,6 +1,6 @@
 //
 //  InstantTooltip.swift
-//  graphic-monitor
+//  TraceBar
 //
 
 import AppKit

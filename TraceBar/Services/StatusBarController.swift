@@ -1,6 +1,6 @@
 //
 //  StatusBarController.swift
-//  graphic-monitor
+//  TraceBar
 //
 
 import AppKit

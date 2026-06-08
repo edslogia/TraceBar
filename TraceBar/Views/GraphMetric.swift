@@ -1,6 +1,6 @@
 //
 //  GraphMetric.swift
-//  graphic-monitor
+//  TraceBar
 //
 
 import SwiftUI

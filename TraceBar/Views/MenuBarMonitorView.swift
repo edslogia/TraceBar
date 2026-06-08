@@ -1,6 +1,6 @@
 //
 //  MenuBarMonitorView.swift
-//  graphic-monitor
+//  TraceBar
 //
 
 import SwiftUI

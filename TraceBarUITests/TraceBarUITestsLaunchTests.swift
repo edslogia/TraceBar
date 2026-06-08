@@ -1,13 +1,13 @@
 //
-//  graphic_monitorUITestsLaunchTests.swift
-//  graphic-monitorUITests
+//  TraceBarUITestsLaunchTests.swift
+//  TraceBarUITests
 //
 //  Created by Edwin González on 6/06/26.
 //
 
 import XCTest
 
-final class graphic_monitorUITestsLaunchTests: XCTestCase {
+final class TraceBarUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

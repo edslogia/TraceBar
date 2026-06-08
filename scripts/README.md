@@ -1,4 +1,4 @@
-# graphic-monitor
+# TraceBar
 
 App de **barra de menú** para macOS que muestra mini-gráficos en tiempo real de CPU, GPU, RAM y red. Sin icono en el Dock: vive en la barra superior junto al reloj y los demás indicadores del sistema.
 
@@ -46,15 +46,15 @@ Los valores se normalizan a `[0, 1]` para el dibujo; el formateo legible (porcen
 
 ## Build e instalación
 
-Compila la app en **Release**, la copia a `/Applications/graphic-monitor.app`, cierra una instancia previa si estaba abierta y la lanza.
+Compila la app en **Release**, la copia a `/Applications/TraceBar.app`, cierra una instancia previa si estaba abierta y la lanza.
 
 ```bash
 ./scripts/build-and-install.sh
 ```
 
-Artefactos intermedios en `build/DerivedData/Build/Products/Release/graphic-monitor.app` (directorio `build/` ignorado por git).
+Artefactos intermedios en `build/DerivedData/Build/Products/Release/TraceBar.app` (directorio `build/` ignorado por git).
 
-Alternativa manual desde Xcode: abrir `graphic-monitor.xcodeproj`, esquema **graphic-monitor**, configuración **Release**, Product → Run o Archive.
+Alternativa manual desde Xcode: abrir `TraceBar.xcodeproj`, esquema **TraceBar**, configuración **Release**, Product → Run o Archive.
 
 ## Uso
 
@@ -82,8 +82,8 @@ Solo se guarda en `UserDefaults` el **estilo de gráfico** (línea o barras) **p
 ## Estructura del proyecto
 
 ```
-graphic-monitor/
-├── graphic_monitorApp.swift      # Arranque, app de barra de menú (sin Dock)
+TraceBar/
+├── TraceBarApp.swift             # Arranque, app de barra de menú (sin Dock)
 ├── Services/
 │   ├── SystemMonitor.swift       # Muestreo CPU/GPU/RAM/red (Mach, IOKit)
 │   └── StatusBarController.swift # NSStatusItem y menú Quit

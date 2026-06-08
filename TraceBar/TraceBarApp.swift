@@ -1,6 +1,6 @@
 //
-//  graphic_monitorApp.swift
-//  graphic-monitor
+//  TraceBarApp.swift
+//  TraceBar
 //
 
 import AppKit
@@ -41,7 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 @main
-struct graphic_monitorApp: App {
+struct TraceBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {

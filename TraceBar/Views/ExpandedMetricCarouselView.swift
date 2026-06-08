@@ -1,6 +1,6 @@
 //
 //  ExpandedMetricCarouselView.swift
-//  graphic-monitor
+//  TraceBar
 //
 
 import AppKit

@@ -1,6 +1,6 @@
 //
 //  GraphStyleStore.swift
-//  graphic-monitor
+//  TraceBar
 //
 
 import Combine

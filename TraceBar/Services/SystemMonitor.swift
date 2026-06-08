@@ -1,6 +1,6 @@
 //
 //  SystemMonitor.swift
-//  graphic-monitor
+//  TraceBar
 //
 
 import Foundation

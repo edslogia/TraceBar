@@ -1,6 +1,6 @@
 //
 //  ExpandedGraphPanelManager.swift
-//  graphic-monitor
+//  TraceBar
 //
 
 import AppKit

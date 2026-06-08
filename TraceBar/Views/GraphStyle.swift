@@ -1,6 +1,6 @@
 //
 //  GraphStyle.swift
-//  graphic-monitor
+//  TraceBar
 //
 
 import SwiftUI
