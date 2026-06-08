@@ -81,11 +81,9 @@ struct ExpandedGraphView: View {
             .frame(height: 96)
 
             HStack(alignment: .firstTextBaseline) {
-                if let subtitle = displayedMetric.subtitle(from: monitor) {
-                    Text(subtitle)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
+                Text(displayedMetric.subtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
 
                 Spacer(minLength: 8)
 

@@ -100,8 +100,7 @@ TraceBar/
     └── GraphStyleStore.swift     # Persisted styles per metric
 
 scripts/
-├── build-and-install.sh          # Release build + install to /Applications
-└── README.md                     # Command documentation
+└── build-and-install.sh          # Release build + install to /Applications
 ```
 
 Stack: Swift, SwiftUI, AppKit (`NSPanel`, native tooltips). No external dependencies.

@@ -87,20 +87,7 @@ enum GraphMetric: Hashable, CaseIterable {
         }
     }
 
-    func valueText(from monitor: SystemMonitor) -> String {
-        switch self {
-        case .cpu:
-            SystemMonitor.formatPercent(monitor.cpuUsage)
-        case .gpu:
-            SystemMonitor.formatPercent(monitor.gpuUsage)
-        case .ram:
-            SystemMonitor.formatPercent(monitor.ramUsage)
-        case .network:
-            "↓ \(SystemMonitor.formatNetworkSpeedMbps(monitor.netDownloadBytesPerSecond)) \(SystemMonitor.formatNetworkSpeed(monitor.netDownloadBytesPerSecond)) · ↑ \(SystemMonitor.formatNetworkSpeedMbps(monitor.netUploadBytesPerSecond)) \(SystemMonitor.formatNetworkSpeed(monitor.netUploadBytesPerSecond))"
-        }
-    }
-
-    func subtitle(from monitor: SystemMonitor) -> String? {
+    var subtitle: String {
         "Last \(SystemMonitor.historyLength)s"
     }
 

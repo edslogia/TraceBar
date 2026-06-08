@@ -22,7 +22,6 @@ final class SystemMonitor {
     private(set) var ramUsage: Double = 0
     private(set) var netDownloadBytesPerSecond: Double = 0
     private(set) var netUploadBytesPerSecond: Double = 0
-    private(set) var netBytesPerSecond: Double = 0
 
     private var timer: Timer?
     private var previousCPUTicks: (user: UInt32, system: UInt32, idle: UInt32, nice: UInt32)?
@@ -60,7 +59,6 @@ final class SystemMonitor {
         let network = readNetworkSample()
         netDownloadBytesPerSecond = network.downloadBytesPerSecond
         netUploadBytesPerSecond = network.uploadBytesPerSecond
-        netBytesPerSecond = network.downloadBytesPerSecond + network.uploadBytesPerSecond
         append(&netDownloadHistory, network.downloadNormalized)
         append(&netUploadHistory, network.uploadNormalized)
     }
@@ -95,9 +93,6 @@ final class SystemMonitor {
     private static func formattedMetricValue(_ value: Double) -> String {
         if value >= 100 {
             return String(format: "%.0f", value)
-        }
-        if value >= 10 {
-            return String(format: "%.1f", value)
         }
         if value >= 1 {
             return String(format: "%.1f", value)

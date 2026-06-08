@@ -3,13 +3,9 @@
 //  TraceBar
 //
 
-import SwiftUI
-
-enum GraphStyle: String, CaseIterable, Codable, Identifiable, Hashable {
+enum GraphStyle: String, Hashable {
     case line
     case bars
-
-    var id: String { rawValue }
 
     var title: String {
         switch self {

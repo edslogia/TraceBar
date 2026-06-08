@@ -10,7 +10,6 @@ import SwiftUI
 final class StatusBarController: NSObject {
     private let statusItem: NSStatusItem
     private let monitor: SystemMonitor
-    private var hostingView: NSHostingView<MenuBarMonitorView>?
     private let menu = NSMenu()
 
     init(monitor: SystemMonitor) {
@@ -42,9 +41,7 @@ final class StatusBarController: NSObject {
         button.action = #selector(handleClick(_:))
         button.sendAction(on: [.rightMouseUp])
 
-        let view = MenuBarMonitorView(monitor: monitor)
-        let hosting = NSHostingView(rootView: view)
-        hostingView = hosting
+        let hosting = NSHostingView(rootView: MenuBarMonitorView(monitor: monitor))
 
         button.subviews.forEach { $0.removeFromSuperview() }
         button.addSubview(hosting)
@@ -73,6 +70,10 @@ final class StatusBarController: NSObject {
             at: NSPoint(x: 0, y: sender.bounds.height + 4),
             in: sender
         )
+    }
+
+    func stopMonitoring() {
+        monitor.stop()
     }
 
     @objc private func quit() {

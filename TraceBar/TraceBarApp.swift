@@ -16,6 +16,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusBarController = StatusBarController(monitor: SystemMonitor())
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        statusBarController?.stopMonitoring()
+    }
+
     /// Atajos de salida para una app de barra de menú (sin Dock ni menú de aplicación).
     /// - Monitor local: ⌘Q cuando la app está activa (p. ej. tras abrir el menú o un gráfico).
     /// - Monitor global: ⌘Q mientras el panel de gráfico sigue visible aunque el foco esté en otra app.
