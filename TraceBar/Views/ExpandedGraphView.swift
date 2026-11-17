@@ -121,6 +121,9 @@ struct ExpandedGraphView: View {
                         .strokeBorder(.white.opacity(0.12), lineWidth: 0.5)
                 }
         }
+        // macOS 15+: restores click-drag to move the borderless panel anywhere.
+        .gesture(WindowDragGesture())
+        .allowsWindowActivationEvents()
     }
 
     @ViewBuilder

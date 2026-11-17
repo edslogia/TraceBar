@@ -51,7 +51,8 @@ struct ExpandedMetricCarouselView: View {
         .frame(width: size.width, height: size.height)
         .clipped()
         .contentShape(Rectangle())
-        .gesture(
+        // highPriority so horizontal swipes change metric instead of moving the panel.
+        .highPriorityGesture(
             DragGesture(minimumDistance: 8)
                 .onEnded { value in
                     let threshold = size.width * 0.12

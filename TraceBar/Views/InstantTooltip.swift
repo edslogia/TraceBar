@@ -128,6 +128,9 @@ final class InstantTooltipView: NSView {
     private var dragStartPoint: NSPoint?
 
     override var isFlipped: Bool { true }
+    override var acceptsFirstResponder: Bool { true }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
@@ -180,7 +183,8 @@ final class InstantTooltipView: NSView {
         guard let onTap, let window else { return }
         InstantTooltipManager.shared.hide()
         let screenRect = window.convertToScreen(convert(bounds, to: nil))
-        Task { @MainActor in
+        // Defer until after the status-item finishes handling this mouse-up (macOS 27 scenes).
+        DispatchQueue.main.async {
             onTap(screenRect)
         }
     }

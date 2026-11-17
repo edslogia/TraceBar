@@ -27,14 +27,9 @@ struct MenuBarMonitorView: View {
             tooltip: metric.tooltip(from: monitor),
             style: styleStore.style(for: metric),
             secondaryData: metric.secondaryHistory(from: monitor),
-            secondaryColor: metric.secondaryColor(),
-            onTap: { anchor in
-                ExpandedGraphPanelManager.shared.toggle(
-                    metric: metric,
-                    monitor: monitor,
-                    anchor: anchor
-                )
-            }
+            secondaryColor: metric.secondaryColor()
+            // Taps are handled by StatusBarController (macOS 27 status-item scenes
+            // often don't deliver mouseUp to SwiftUI overlay views).
         )
     }
 }
