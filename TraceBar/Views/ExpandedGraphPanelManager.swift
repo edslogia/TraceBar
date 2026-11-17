@@ -37,7 +37,9 @@ final class ExpandedGraphPanelManager: ObservableObject {
     static let shared = ExpandedGraphPanelManager()
 
     @Published private(set) var displayedMetric: GraphMetric = .cpu
+    @Published private(set) var displayMode: ExpandedDisplayMode = .single
 
+    private var metricBeforeMultiView: GraphMetric?
     private var panel: NSPanel?
     private var hostingView: DraggableHostingView<ExpandedGraphView>?
     private weak var monitor: SystemMonitor?
@@ -72,6 +74,37 @@ final class ExpandedGraphPanelManager: ObservableObject {
         displayedMetric = metric
     }
 
+    func cycleDisplayMode() {
+        let next = displayMode.next
+
+        switch (displayMode, next) {
+        case (.single, .grid):
+            metricBeforeMultiView = displayedMetric
+        case (.stack, .single):
+            if let restored = metricBeforeMultiView {
+                displayedMetric = restored
+            }
+            metricBeforeMultiView = nil
+        default:
+            break
+        }
+
+        displayMode = next
+    }
+
+    func refreshPanelSize() {
+        guard let panel, let hosting = hostingView, panel.isVisible else { return }
+
+        hosting.layoutSubtreeIfNeeded()
+        let newSize = hosting.fittingSize
+        let oldFrame = panel.frame
+        let newOrigin = NSPoint(
+            x: oldFrame.origin.x + (oldFrame.width - newSize.width) / 2,
+            y: oldFrame.origin.y + (oldFrame.height - newSize.height)
+        )
+        panel.setFrame(NSRect(origin: newOrigin, size: newSize), display: true)
+    }
+
     func toggle(metric: GraphMetric, monitor: SystemMonitor, anchor: NSRect) {
         if panel?.isVisible == true, displayedMetric == metric {
             hide()
@@ -84,6 +117,8 @@ final class ExpandedGraphPanelManager: ObservableObject {
     func hide() {
         removeOutsideClickMonitor()
         isPinned = false
+        displayMode = .single
+        metricBeforeMultiView = nil
         resetPanelPosition()
         panel?.orderOut(nil)
         self.monitor = nil
@@ -93,6 +128,8 @@ final class ExpandedGraphPanelManager: ObservableObject {
         InstantTooltipManager.shared.hide()
 
         displayedMetric = metric
+        displayMode = .single
+        metricBeforeMultiView = nil
 
         let panel = self.panel ?? makePanel()
         let hosting = self.hostingView ?? makeHostingView(in: panel, monitor: monitor)

@@ -6,6 +6,15 @@
 import AppKit
 import SwiftUI
 
+private enum ExpandedPanelLayout {
+    static let panelWidth: CGFloat = 300
+    static let singleGraphHeight: CGFloat = 96
+    static let multiMetricSpacing: CGFloat = 10
+    static let gridPanelWidth: CGFloat = panelWidth * 2
+    static let gridGraphRegionHeight: CGFloat = singleGraphHeight * 2
+    static let stackGraphRegionHeight: CGFloat = singleGraphHeight * 4 + multiMetricSpacing * 3
+}
+
 struct ExpandedGraphView: View {
     let monitor: SystemMonitor
 
@@ -29,59 +38,64 @@ struct ExpandedGraphView: View {
         )
     }
 
+    private var displayMode: ExpandedDisplayMode {
+        panelManager.displayMode
+    }
+
+    private var isMultiMetric: Bool {
+        displayMode.isMultiMetric
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: displayedMetric == .network ? .top : .firstTextBaseline) {
-                Text(displayedMetric.title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.primary)
+            HStack(alignment: headerValueAlignment) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(headerTitle)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.primary)
 
-                Button {
-                    styleStore.toggleStyle(for: displayedMetric)
-                } label: {
-                    Image(systemName: styleStore.style(for: displayedMetric).systemImage)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(displayedMetric.color)
-                        .frame(width: 20, height: 16)
-                }
-                .buttonStyle(.plain)
-                .onHover { inside in
-                    inside ? NSCursor.pointingHand.push() : NSCursor.pop()
-                }
-                .help(styleToggleHelp)
+                    HStack(spacing: 0) {
+                        headerIconButton(
+                            help: isPinned ? "Desfijar panel" : "Fijar panel"
+                        ) {
+                            isPinned.toggle()
+                            ExpandedGraphPanelManager.shared.setPinned(isPinned)
+                        } label: {
+                            Image(systemName: isPinned ? "pin.fill" : "pin")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(isPinned ? displayedMetric.color : Color.secondary)
+                                .rotationEffect(.degrees(45))
+                                .frame(width: 20, height: 16)
+                        }
 
-                Button {
-                    isPinned.toggle()
-                    ExpandedGraphPanelManager.shared.setPinned(isPinned)
-                } label: {
-                    Image(systemName: isPinned ? "pin.fill" : "pin")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(isPinned ? displayedMetric.color : Color.secondary)
-                        .frame(width: 20, height: 16)
+                        layoutModeButton
+
+                        if !isMultiMetric {
+                            headerIconButton(
+                                systemImage: styleStore.style(for: displayedMetric).systemImage,
+                                foreground: displayedMetric.color,
+                                help: styleToggleHelp
+                            ) {
+                                styleStore.toggleStyle(for: displayedMetric)
+                            }
+                        }
+                    }
                 }
-                .buttonStyle(.plain)
-                .onHover { inside in
-                    inside ? NSCursor.pointingHand.push() : NSCursor.pop()
-                }
-                .help(isPinned ? "Desfijar panel" : "Fijar panel")
 
                 Spacer(minLength: 8)
 
-                AnimatedMetricValueView(metric: displayedMetric, monitor: monitor)
-                    .font(.system(size: 15, weight: .medium, design: .monospaced))
-                    .foregroundStyle(displayedMetric.color)
-                    .layoutPriority(1)
+                if !isMultiMetric {
+                    AnimatedMetricValueView(metric: displayedMetric, monitor: monitor)
+                        .font(.system(size: 15, weight: .medium, design: .monospaced))
+                        .foregroundStyle(displayedMetric.color)
+                        .layoutPriority(1)
+                }
             }
 
-            ExpandedMetricCarouselView(
-                metric: displayedMetricBinding,
-                styleStore: styleStore,
-                monitor: monitor
-            )
-            .frame(height: 96)
+            graphContent
 
             HStack(alignment: .firstTextBaseline) {
-                Text(displayedMetric.subtitle)
+                Text(isMultiMetric ? "All metrics" : displayedMetric.subtitle)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
 
@@ -93,7 +107,12 @@ struct ExpandedGraphView: View {
             }
         }
         .padding(14)
-        .frame(width: 300)
+        .frame(width: panelWidth)
+        .onChange(of: panelManager.displayMode) { _, _ in
+            DispatchQueue.main.async {
+                panelManager.refreshPanelSize()
+            }
+        }
         .background {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(.regularMaterial)
@@ -104,10 +123,96 @@ struct ExpandedGraphView: View {
         }
     }
 
+    @ViewBuilder
+    private var graphContent: some View {
+        switch displayMode {
+        case .single:
+            ExpandedMetricCarouselView(
+                metric: displayedMetricBinding,
+                styleStore: styleStore,
+                monitor: monitor
+            )
+            .frame(height: ExpandedPanelLayout.singleGraphHeight)
+        case .grid:
+            ExpandedAllMetricsGridView(monitor: monitor, styleStore: styleStore)
+                .frame(height: ExpandedPanelLayout.gridGraphRegionHeight)
+        case .stack:
+            ExpandedAllMetricsStackView(monitor: monitor, styleStore: styleStore)
+                .frame(height: ExpandedPanelLayout.stackGraphRegionHeight)
+        }
+    }
+
+    private var layoutModeButton: some View {
+        let foreground = isMultiMetric ? displayedMetric.color : Color.secondary
+        let help = displayMode.layoutHelp(restoreMetric: displayedMetric)
+
+        return headerIconButton(help: help) {
+            panelManager.cycleDisplayMode()
+        } label: {
+            Group {
+                switch displayMode {
+                case .single:
+                    Image(systemName: "square.grid.2x2")
+                case .grid:
+                    FourHorizontalLinesIcon(color: foreground)
+                case .stack:
+                    Image(systemName: "square")
+                }
+            }
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(foreground)
+            .frame(width: 20, height: 16)
+        }
+    }
+
+    private var panelWidth: CGFloat {
+        displayMode.usesWidePanel
+            ? ExpandedPanelLayout.gridPanelWidth
+            : ExpandedPanelLayout.panelWidth
+    }
+
+    private var headerTitle: String {
+        isMultiMetric ? "All" : displayedMetric.title
+    }
+
+    private var headerValueAlignment: VerticalAlignment {
+        if isMultiMetric { return .firstTextBaseline }
+        return displayedMetric == .network ? .top : .firstTextBaseline
+    }
+
     private var styleToggleHelp: String {
         let current = styleStore.style(for: displayedMetric)
         let next = current == .line ? GraphStyle.bars : GraphStyle.line
         return "Vista \(current.title.lowercased()) · clic para \(next.title.lowercased())"
+    }
+
+    private func headerIconButton(
+        systemImage: String,
+        foreground: Color,
+        help: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        headerIconButton(help: help, action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(foreground)
+                .frame(width: 20, height: 16)
+        }
+    }
+
+    private func headerIconButton<Label: View>(
+        help: String,
+        action: @escaping () -> Void,
+        @ViewBuilder label: () -> Label
+    ) -> some View {
+        Button(action: action) {
+            label()
+        }
+        .buttonStyle(.plain)
+        .onHover { inside in
+            inside ? NSCursor.pointingHand.push() : NSCursor.pop()
+        }
+        .help(help)
     }
 }
 
